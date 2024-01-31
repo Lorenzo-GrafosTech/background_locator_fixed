@@ -117,13 +117,11 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
         val intent = Intent(this, getMainActivityClass(this))
         intent.action = Keys.NOTIFICATION_ACTION
 
-        val opts = ActivityOptionsCompat.makeBasic()
-
-        opts.setPendingIntentBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+        val opts = ActivityOptionsCompat.makeBasic().setPendingIntentBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
 
         val pendingIntent: PendingIntent = PendingIntent.getActivity(
             this,
-            1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT, opts
+            1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT, opts.toBundle()
         )
 
         return NotificationCompat.Builder(this, Keys.CHANNEL_ID)
