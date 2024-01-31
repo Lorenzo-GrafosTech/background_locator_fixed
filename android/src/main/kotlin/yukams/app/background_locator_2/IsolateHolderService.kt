@@ -22,6 +22,7 @@ import yukams.app.background_locator_2.pluggables.Pluggable
 import yukams.app.background_locator_2.provider.*
 import java.util.HashMap
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityOptionsCompat
 
 class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateListener, Service() {
     companion object {
@@ -116,9 +117,13 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
         val intent = Intent(this, getMainActivityClass(this))
         intent.action = Keys.NOTIFICATION_ACTION
 
+        val opts = ActivityOptionsCompat.makeBasic()
+
+        opts.setPendingIntentBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+
         val pendingIntent: PendingIntent = PendingIntent.getActivity(
             this,
-            1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT, opts
         )
 
         return NotificationCompat.Builder(this, Keys.CHANNEL_ID)
@@ -269,6 +274,10 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
         try {
             when (call.method) {
                 Keys.METHOD_SERVICE_INITIALIZED -> {
+                    if (!isServiceRunning) {
+                        isServiceRunning = true
+                        startHolderService(intent)
+                    }
                     isServiceRunning = true
                 }
                 else -> result.notImplemented()
