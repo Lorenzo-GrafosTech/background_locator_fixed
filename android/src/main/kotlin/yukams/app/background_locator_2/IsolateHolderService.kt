@@ -282,10 +282,6 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
         try {
             when (call.method) {
                 Keys.METHOD_SERVICE_INITIALIZED -> {
-                    if (!isServiceRunning) {
-                        isServiceRunning = true
-                        startHolderService(intent)
-                    }
                     isServiceRunning = true
                 }
                 else -> result.notImplemented()
