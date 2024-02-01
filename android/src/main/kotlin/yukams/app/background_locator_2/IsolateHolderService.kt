@@ -2,6 +2,7 @@ package yukams.app.background_locator_2
 
 import android.app.*
 import android.Manifest
+import android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -117,12 +118,19 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
         val intent = Intent(this, getMainActivityClass(this))
         intent.action = Keys.NOTIFICATION_ACTION
 
-        val opts = ActivityOptionsCompat.makeBasic().setPendingIntentBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+        if (Build.VERSION.SDK_INT >= 34) {
+            val opts = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
 
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(
-            this,
-            1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT, opts.toBundle()
-        )
+            val pendingIntent: PendingIntent = PendingIntent.getActivity(
+                this,
+                1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT, opts.toBundle()
+            )
+        } else {
+            val pendingIntent: PendingIntent = PendingIntent.getActivity(
+                this,
+                1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
 
         return NotificationCompat.Builder(this, Keys.CHANNEL_ID)
             .setContentTitle(notificationTitle)
