@@ -120,20 +120,13 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
 
         lateinit var pendingIntent: PendingIntent
 
-        if (Build.VERSION.SDK_INT >= 34) {
-            val opts = ActivityOptions.makeBasic()
-                .setPendingIntentCreatorBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+        val opts = ActivityOptions.makeBasic()
+            .setPendingIntentCreatorBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
 
-            pendingIntent = PendingIntent.getActivity(
-                this,
-                1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT, opts.toBundle()
-            )
-        } else {
-            pendingIntent = PendingIntent.getActivity(
-                this,
-                1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-        }
+        pendingIntent = PendingIntent.getActivity(
+            this,
+            1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT, opts.toBundle()
+        )
 
         return NotificationCompat.Builder(this, Keys.CHANNEL_ID)
             .setContentTitle(notificationTitle)
