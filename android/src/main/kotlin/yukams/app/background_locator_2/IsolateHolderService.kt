@@ -121,9 +121,8 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
         lateinit var pendingIntent: PendingIntent
 
         if (Build.VERSION.SDK_INT >= 34) {
-            val opts = ActivityOptions.makeBasic()
-                .setPendingIntentCreatorBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
-    
+            val opts = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+
             pendingIntent = PendingIntent.getActivity(
                 this,
                 1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT, opts.toBundle()
@@ -134,7 +133,7 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
                 1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
         }
-
+        Log.e("Teste2", icon.toString())
         return NotificationCompat.Builder(this, Keys.CHANNEL_ID)
             .setContentTitle(notificationTitle)
             .setContentText(notificationMsg)
@@ -205,6 +204,7 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
             iconName = iconNameDefault
         }
         icon = resources.getIdentifier(iconName, "mipmap", packageName)
+        Log.e("Teste", icon.toString())
         notificationIconColor =
             intent.getLongExtra(Keys.SETTINGS_ANDROID_NOTIFICATION_ICON_COLOR, 0).toInt()
         wakeLockTime = intent.getIntExtra(Keys.SETTINGS_ANDROID_WAKE_LOCK_TIME, 60) * 60 * 1000L
