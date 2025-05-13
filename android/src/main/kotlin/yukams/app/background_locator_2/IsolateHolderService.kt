@@ -191,8 +191,8 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
                 }
 
                 if (!isServiceRunning) {
-                    isServiceRunning = true
                     startHolderService(intent)
+                    isServiceRunning = true
                 }
             }
             ACTION_UPDATE_NOTIFICATION == intent?.action -> {
