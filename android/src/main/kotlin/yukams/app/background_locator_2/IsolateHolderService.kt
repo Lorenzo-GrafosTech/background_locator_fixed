@@ -219,7 +219,7 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
         if (iconName == null || iconName.isEmpty()) {
             iconName = iconNameDefault
         }
-        icon = resources.getIdentifier(iconName, "mipmap", packageName)
+        icon = resources.getIdentifier(iconName, "drawable", packageName)
         Log.i("Teste3", iconName)
         Log.i("Teste3", resources.getIdentifier(iconName, "mipmap", packageName).toString())
         notificationIconColor =
