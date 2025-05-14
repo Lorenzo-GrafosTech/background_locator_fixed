@@ -221,7 +221,7 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
         }
         icon = resources.getIdentifier(iconName, "mipmap", packageName)
         Log.i("Teste3", iconName)
-        Log.i("Teste3", resources.getIdentifier(iconName, "mipmap", packageName))
+        Log.i("Teste3", resources.getIdentifier(iconName, "mipmap", packageName).toString())
         notificationIconColor =
             intent.getLongExtra(Keys.SETTINGS_ANDROID_NOTIFICATION_ICON_COLOR, 0).toInt()
         wakeLockTime = intent.getIntExtra(Keys.SETTINGS_ANDROID_WAKE_LOCK_TIME, 60) * 60 * 1000L
