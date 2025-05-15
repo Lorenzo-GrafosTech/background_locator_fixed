@@ -137,7 +137,7 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
         lateinit var pendingIntent: PendingIntent
 
         if (Build.VERSION.SDK_INT >= 34) {
-            val opts = ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+            val opts = ActivityOptions.makeBasic().setPendingIntentCreatorBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
 
             pendingIntent = PendingIntent.getActivity(
                 this,
