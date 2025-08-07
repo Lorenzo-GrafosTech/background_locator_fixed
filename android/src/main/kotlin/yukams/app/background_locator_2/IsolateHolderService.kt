@@ -111,6 +111,7 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
         }
 
         // Starting Service as foreground with a notification prevent service from closing
+        // TODO: Verificar se pode retirar por ser redundante
         val notification = getNotification()
         startForeground(notificationId, notification)
 
@@ -168,6 +169,10 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.e("IsolateHolderService", "onStartCommand => intent.action : ${intent?.action}")
+
+        val notification = getNotification()
+        startForeground(notificationId, notification)
+        
         if(intent == null) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
