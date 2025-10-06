@@ -125,7 +125,7 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
             // Notification channel is available in Android O and up
             val channel = NotificationChannel(
                 Keys.CHANNEL_ID, notificationChannelName,
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_DEFAULT
             )
 
             (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
