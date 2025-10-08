@@ -8,7 +8,7 @@ import 'package:background_locator_2/settings/android_settings.dart';
 import 'package:background_locator_2/settings/ios_settings.dart';
 import 'package:background_locator_2/settings/locator_settings.dart';
 import 'package:flutter/material.dart';
-import 'package:location_permissions/location_permissions.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'file_manager.dart';
 import 'location_callback_handler.dart';
@@ -25,8 +25,8 @@ class _MyAppState extends State<MyApp> {
   ReceivePort port = ReceivePort();
 
   String logStr = '';
-  bool isRunning;
-  LocationDto lastLocation;
+  bool? isRunning;
+  LocationDto? lastLocation;
 
   @override
   void initState() {
@@ -58,7 +58,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> updateUI(dynamic data) async {
     final log = await FileManager.readLogFile();
 
-    LocationDto locationDto = (data != null) ? LocationDto.fromJson(data) : null;
+    LocationDto? locationDto = (data != null) ? LocationDto.fromJson(data) : null;
     await _updateNotificationText(locationDto);
 
     setState(() {
@@ -69,7 +69,7 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> _updateNotificationText(LocationDto data) async {
+  Future<void> _updateNotificationText(LocationDto? data) async {
     if (data == null) {
       return;
     }
@@ -77,7 +77,7 @@ class _MyAppState extends State<MyApp> {
     await BackgroundLocator.updateNotificationText(
         title: "new location received",
         msg: "${DateTime.now()}",
-        bigMsg: "${data.latitude}, ${data.longitude}");
+        bigMsg: "${data?.latitude}, ${data?.longitude}");
   }
 
   Future<void> initPlatformState() async {
@@ -126,7 +126,7 @@ class _MyAppState extends State<MyApp> {
     );
     String msgStatus = "-";
     if (isRunning != null) {
-      if (isRunning) {
+      if (isRunning!) {
         msgStatus = 'Is running';
       } else {
         msgStatus = 'Is not running';
@@ -166,7 +166,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _onStart() async {
-    if (await _checkLocationPermission()) {
+    if (await _checkLocationPermission()) { 
       await _startLocator();
       final _isRunning = await BackgroundLocator.isServiceRunning();
 
@@ -180,27 +180,29 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<bool> _checkLocationPermission() async {
-    final access = await LocationPermissions().checkPermissionStatus();
-    switch (access) {
-      case PermissionStatus.unknown:
-      case PermissionStatus.denied:
-      case PermissionStatus.restricted:
-        final permission = await LocationPermissions().requestPermissions(
-          permissionLevel: LocationPermissionLevel.locationAlways,
-        );
-        if (permission == PermissionStatus.granted) {
-          return true;
-        } else {
-          return false;
-        }
-        break;
-      case PermissionStatus.granted:
-        return true;
-        break;
-      default:
-        return false;
-        break;
+    // Primeiro solicita permissão de notificação (Android 13+)
+    final notificationStatus = await Permission.notification.request();
+    if (notificationStatus != PermissionStatus.granted) {
+      print('Permissão de notificação negada - notificações podem não funcionar');
     }
+    
+    // Solicita permissão de localização quando em uso
+    final accessStatus = await Permission.locationWhenInUse.request();
+    
+    if (accessStatus != PermissionStatus.granted) {
+      print('Permissão de localização negada');
+      return false;
+    }
+    
+    // Depois solicita permissão de localização em background
+    final backgroundStatus = await Permission.locationAlways.request();
+    
+    if (backgroundStatus != PermissionStatus.granted) {
+      print('Permissão de localização em background negada');
+      // Continua mesmo sem background location para funcionar em foreground
+    }
+    
+    return true;
   }
 
   Future<void> _startLocator() async{
