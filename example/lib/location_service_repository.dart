@@ -39,7 +39,7 @@ class LocationServiceRepository {
     }
     print("$_count");
     await setLogLabel("start");
-    final SendPort send = IsolateNameServer.lookupPortByName(isolateName);
+    final SendPort? send = IsolateNameServer.lookupPortByName(isolateName);
     send?.send(null);
   }
 
@@ -47,14 +47,15 @@ class LocationServiceRepository {
     print("***********Dispose callback handler");
     print("$_count");
     await setLogLabel("end");
-    final SendPort send = IsolateNameServer.lookupPortByName(isolateName);
+    final SendPort? send = IsolateNameServer.lookupPortByName(isolateName);
     send?.send(null);
   }
 
   Future<void> callback(LocationDto locationDto) async {
+    print('🌍 NOVA POSIÇÃO #$_count - Lat: ${locationDto.latitude}, Long: ${locationDto.longitude}, Accuracy: ${locationDto.accuracy}m');
     print('$_count location in dart: ${locationDto.toString()}');
     await setLogPosition(_count, locationDto);
-    final SendPort send = IsolateNameServer.lookupPortByName(isolateName);
+    final SendPort? send = IsolateNameServer.lookupPortByName(isolateName);
     send?.send(locationDto.toJson());
     _count++;
 
@@ -73,7 +74,7 @@ class LocationServiceRepository {
   }
 
   static double dp(double val, int places) {
-    double mod = pow(10.0, places);
+    double mod = double.parse(pow(10.0, places.toDouble()).toString());
     return ((val * mod).round().toDouble() / mod);
   }
 
