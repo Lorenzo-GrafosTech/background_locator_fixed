@@ -98,38 +98,56 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
 
     override fun onCreate() {
         super.onCreate()
+        // Sem permissão de localização o Android recusa o serviço de localização em foreground
+        // (SecurityException) e o app fechava em loop: o serviço é START_STICKY e o Android o
+        // recriava a cada vez (ex.: motorista bloqueou a localização nos ajustes).
+        if (!iniciarEmForeground(getNotification())) {
+            stopSelf()
+            return
+        }
         startLocatorService(this)
-        
-        // Inicia como serviço em foreground com tipo location para Android 14+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                notificationId, 
-                getNotification(),
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-            )
-        } else {
-            startForeground(notificationId, getNotification())
+    }
+
+    private fun temPermissaoLocalizacao(): Boolean =
+        ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+    /** Coloca o serviço em foreground; devolve false se não houver permissão ou o Android recusar. */
+    private fun iniciarEmForeground(notification: Notification): Boolean {
+        if (!temPermissaoLocalizacao()) {
+            Log.e("IsolateHolderService", "Sem permissão de localização: serviço não inicia")
+            return false
+        }
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    notificationId,
+                    notification,
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                )
+            } else {
+                startForeground(notificationId, notification)
+            }
+            true
+        } catch (e: Exception) {
+            // SecurityException ou ForegroundServiceStartNotAllowedException (Android 12+).
+            Log.e("IsolateHolderService", "Android recusou o serviço em foreground: $e")
+            false
         }
     }
 
     private fun start() {
+        // Starting Service as foreground with a notification prevent service from closing
+        if (!iniciarEmForeground(getNotification())) {
+            stopSelf()
+            return
+        }
+
         (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
             newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKELOCK_TAG).apply {
                 setReferenceCounted(false)
                 acquire(wakeLockTime)
             }
-        }
-
-        // Starting Service as foreground with a notification prevent service from closing
-        val notification = getNotification()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                notificationId, 
-                notification,
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-            )
-        } else {
-            startForeground(notificationId, notification)
         }
 
         pluggables.forEach {
@@ -223,26 +241,15 @@ class IsolateHolderService : MethodChannel.MethodCallHandler, LocationUpdateList
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.e("IsolateHolderService", "onStartCommand => intent.action : ${intent?.action}")
 
-        val notification = getNotification()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                notificationId, 
-                notification,
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-            )
-        } else {
-            startForeground(notificationId, notification)
+        // Sem permissão: para e não pede para o Android recriar o serviço (era o loop de falhas).
+        if (!iniciarEmForeground(getNotification())) {
+            isServiceRunning = false
+            stopSelf()
+            return START_NOT_STICKY
         }
-        
-        if(intent == null) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                Log.e("IsolateHolderService", "app has crashed, stopping it")
-                stopSelf()
-            }
-            else {
-                return super.onStartCommand(intent, flags, startId)
-            }
+
+        if (intent == null) {
+            return super.onStartCommand(intent, flags, startId)
         }
 
         when {
